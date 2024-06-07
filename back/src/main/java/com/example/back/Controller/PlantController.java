@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URISyntaxException;
 import java.util.List;
 
 @RestController
@@ -54,23 +55,26 @@ public class PlantController {
     }
 
     @PostMapping(path = "/humidity/update",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE)
-    @CrossOrigin(origins = "http://localhost:4200")
-    public ResponseEntity<Boolean> setPlantHumidity(@RequestBody PlantHumidityUpdateRequest request) {
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = "http://192.168.43.133:8123")
+    public ResponseEntity<Boolean> setPlantHumidity(@RequestBody PlantHumidityUpdateRequest request) throws URISyntaxException {
         if (plantService.getPlantById(request.getDevice()).isPresent()) {
-            plantService.setPlantHumidity(request.getDevice(), request.getHumidity());
+            double primitiveDoubleHumidity = Double.parseDouble(request.getHumidity());
+            int humidity = (int) primitiveDoubleHumidity;
+            plantService.setPlantHumidity(request.getDevice(), humidity);
 
             Plant plant = plantService.getPlantById(request.getDevice()).get();
             if (plant.getCurrentHumidity() < plant.getMinHumidity()) {
+                plantService.lowHumidityRequest("http://192.168.43.133:8123/humidity/low", request.getDevice());
                 return new ResponseEntity<>(false, HttpStatus.OK);
             }
             else {
+                System.out.println(true);
                 return new ResponseEntity<>(true, HttpStatus.OK);
             }
         }
         else {
             return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-        }
-    }
+        }}
 }

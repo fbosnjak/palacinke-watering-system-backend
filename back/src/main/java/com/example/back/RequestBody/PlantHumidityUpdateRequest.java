@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class PlantHumidityUpdateRequest {
     private String device;
-    private int humidity;
+    private String humidity;
 }
