@@ -12,7 +12,11 @@ public class Plant {
     @Id
     private String id;
     private String name;
-    private int minHumidity;
-    private int maxHumidity;
-    private int currentHumidity;
+    private int minHumidity = -1;
+    private int maxHumidity = -1;
+    private int currentHumidity = -1;
+
+    public Plant(String id) {
+        this.id = id;
+    }
 }

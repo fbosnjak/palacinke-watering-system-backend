@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +27,7 @@ public class PlantService {
     }
 
     public void addPlant(Plant plant) {
+        plantRepository.deleteById(plant.getId());
         plantRepository.save(plant);
     }
 
@@ -55,6 +56,38 @@ public class PlantService {
 
         String body = "{\n" +
                 "    \"device\" : \"" + device + "\",\n" +
+                "}";
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+        URI uri = new URI(url);
+
+        String response = restTemplate.postForObject(uri, request, String.class);
+        System.out.println(response);
+    }
+
+    public ArrayList<String> getUnregisteredDevices() {
+        ArrayList<String> ret = new ArrayList<>();
+        List<Plant> allPlants = getAllPlants();
+        for (Plant plant : allPlants) {
+            if (plant.getName().isBlank() && plant.getMinHumidity() == -1 && plant.getMaxHumidity() == -1)
+                ret.add(plant.getId());
+        }
+        return ret;
+    }
+
+    public void sendPlantDataToHA(String url, Plant plant) throws URISyntaxException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        //headers.add("Authorization", "Bearer " + token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Accept", "application/json");
+
+        String body = "{\n" +
+                "    \"device\" : \"" + plant.getId() + "\",\n" +
+                "    \"name\" : \"" + plant.getName() + "\",\n" +
+                "    \"minHumidity\" : " + plant.getMinHumidity() + ",\n" +
+                "    \"maxHumidity\" : " + plant.getMaxHumidity() + "\n" +
                 "}";
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
